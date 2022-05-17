@@ -24,13 +24,6 @@ jobs:
       - run: pipenv run flake8 .
       - run: pipenv run black --line-length=120 --check .
       - run: pipenv run isort --check --line-length 120 --profile black .
-      - run: |
-          mkdir -p $HOME/.local/bin
-          wget https://static.snyk.io/cli/latest/snyk-linux -O $HOME/.local/bin/snyk
-          chmod +x $HOME/.local/bin/snyk
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-      - run: snyk test --org=devops-0yx --project-name=${{ github.event.repository.name }}
-      - run: snyk code test --org=devops-0yx --project-name=${{ github.event.repository.name }}
   build_release:
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     name: build_release
