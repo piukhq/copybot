@@ -7,10 +7,10 @@ name = "pypi"
 copybot = {editable = true, path = "."}
 psycopg2-binary = "*"
 sqlalchemy = "*"
-alembic = "*"
 pydantic = "*"
 pika = "*"
 python-json-logger = "*"
+click = "*"
 
 [dev-packages]
 black = "*"
