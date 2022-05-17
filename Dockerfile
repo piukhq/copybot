@@ -4,3 +4,5 @@ WORKDIR /app
 COPY . .
 
 RUN pipenv install --system --deploy --ignore-pipfile
+
+ENTRYPOINT [ "linkerd-await", "--" ]
