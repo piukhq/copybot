@@ -3,6 +3,8 @@ import logging
 from datetime import datetime
 from random import randint
 
+from time import sleep
+
 import pika
 from pika.adapters.blocking_connection import BlockingChannel
 from pika.spec import Basic, BasicProperties
@@ -133,4 +135,5 @@ def rabbitmq_message_get(queue: str) -> None:
                     channel.stop_consuming()
                     break
         except pika.exceptions.ChannelClosedByBroker:
+            sleep(60)
             continue
