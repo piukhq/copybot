@@ -2,7 +2,6 @@ import json
 import logging
 from datetime import datetime
 from random import randint
-
 from time import sleep
 
 import pika
