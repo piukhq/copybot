@@ -118,14 +118,19 @@ def rabbitmq_message_get(queue: str) -> None:
     """
     Gets Messages from RabbitMQ Forever
     """
-    with pika.BlockingConnection(pika.URLParameters(settings.amqp_url)) as connection:
-        channel = connection.channel()
-        channel.basic_consume(
-            queue=queue,
-            on_message_callback=process_message,
-            auto_ack=False,
-        )
+    while True:
         try:
-            channel.start_consuming()
-        except KeyboardInterrupt:
-            channel.stop_consuming()
+            with pika.BlockingConnection(pika.URLParameters(settings.amqp_url)) as connection:
+                channel = connection.channel()
+                channel.basic_consume(
+                    queue=queue,
+                    on_message_callback=process_message,
+                    auto_ack=False,
+                )
+                try:
+                    channel.start_consuming()
+                except KeyboardInterrupt:
+                    channel.stop_consuming()
+                    break
+        except pika.exceptions.ChannelClosedByBroker:
+            continue
