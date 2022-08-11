@@ -20,7 +20,7 @@ logFmt = jsonlogger.JsonFormatter(timestamp=True)
 logHandler.setFormatter(logFmt)
 logger.addHandler(logHandler)
 
-engine = create_engine(settings.postgres_host.format(settings.postgres_db))
+engine = create_engine(settings.postgres_host.format(settings.postgres_db), connect_args=settings.postgres_connect_args)
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
 
