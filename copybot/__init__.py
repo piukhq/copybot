@@ -130,6 +130,9 @@ def rabbitmq_message_get(queue: str) -> None:
                 )
                 try:
                     channel.start_consuming()
+                except pika.exceptions.ChannelClosedByBroker:
+                    sleep(60)
+                    continue
                 except KeyboardInterrupt:
                     channel.stop_consuming()
                     break
