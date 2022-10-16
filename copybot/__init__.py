@@ -28,7 +28,7 @@ engine = create_engine(settings.postgres_host.format(settings.postgres_db), conn
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
 
-total_events_processed = Counter("total_events_processed", "Count of messages processed")
+total_events_processed = Counter("events_processed", "Count of messages processed")
 
 
 class Events(Base):
