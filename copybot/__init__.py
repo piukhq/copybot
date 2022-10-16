@@ -1,18 +1,22 @@
 import json
 import logging
 from datetime import datetime
+from importlib.metadata import version
 from random import randint
 from time import sleep
 
 import pika
 from pika.adapters.blocking_connection import BlockingChannel
 from pika.spec import Basic, BasicProperties
+from prometheus_client import Counter
 from pythonjsonlogger import jsonlogger
 from sqlalchemy import JSON, Column, DateTime, Integer, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-from settings import settings
+from copybot.settings import settings
+
+__version__ = version("copybot")
 
 logger = logging.getLogger()
 logHandler = logging.StreamHandler()
@@ -23,6 +27,8 @@ logger.addHandler(logHandler)
 engine = create_engine(settings.postgres_host.format(settings.postgres_db), connect_args=settings.postgres_connect_args)
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
+
+total_events_processed = Counter("total_events_processed", "Count of messages processed")
 
 
 class Events(Base):
@@ -73,6 +79,7 @@ def process_message(ch: BlockingChannel, method: Basic.Deliver, properties: Basi
                 session.add(insert)
                 session.commit()
             ch.basic_ack(delivery_tag=method.delivery_tag)
+            total_events_processed.inc()
             break
         except Exception as ex:
             retries -= 1
@@ -130,12 +137,10 @@ def rabbitmq_message_get(queue: str) -> None:
                 )
                 try:
                     channel.start_consuming()
-                except pika.exceptions.ChannelClosedByBroker:
-                    sleep(60)
-                    continue
                 except KeyboardInterrupt:
                     channel.stop_consuming()
                     break
-        except pika.exceptions.ChannelClosedByBroker:
+        except (pika.exceptions.ChannelClosedByBroker, pika.exceptions.AMQPConnectionError):
+            logging.warning("AMQP Error detected, retrying in 60s")
             sleep(60)
             continue
