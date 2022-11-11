@@ -46,6 +46,7 @@ jobs:
       - uses: docker/build-push-action@v3
         with:
           push: true
+          context: .
           platforms: linux/amd64, linux/arm64
           tags: |
             binkcore.azurecr.io/${{ github.event.repository.name }}:${{ github.event.release.tag_name }}
