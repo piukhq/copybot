@@ -1,6 +1,7 @@
 FROM ghcr.io/binkhq/python:3.11-poetry as build
 WORKDIR /src
 ADD . .
+RUN ls -lah
 RUN poetry build
 
 FROM ghcr.io/binkhq/python:3.11
