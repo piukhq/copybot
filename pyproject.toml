@@ -26,6 +26,7 @@ black = "^22.10.0"
 
 [tool.poetry-dynamic-versioning]
 enable = true
+vcs = "git"
 
 [tool.black]
 line-length = 120
