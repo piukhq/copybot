@@ -1,10 +1,9 @@
-FROM ghcr.io/binkhq/python:3.10 as build
+FROM ghcr.io/binkhq/python:3.11-poetry as build
 WORKDIR /src
-RUN pip install poetry
 ADD . .
 RUN poetry build
 
-FROM ghcr.io/binkhq/python:3.10
+FROM ghcr.io/binkhq/python:3.11
 
 WORKDIR /app
 COPY --from=build /src/dist/*.whl .

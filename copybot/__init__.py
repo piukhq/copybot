@@ -1,8 +1,8 @@
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from importlib.metadata import version
-from random import randint
+from random import choice, randint
 from time import sleep
 
 import pika
@@ -48,6 +48,21 @@ def dead_letter(msg: dict) -> None:
         channel = connection.channel()
         channel.queue_declare(queue="clickhouse_deadletter", durable=True)
         channel.basic_publish(exchange="", routing_key="clickhouse_deadletter", body=json.dumps(msg))
+
+
+def pg_cleanup(days: int, splay: int) -> None:
+    """
+    Delete old database records
+    """
+    rand_splay = randint(0, splay)
+    logging.warning(msg="Beginning Cleanup Operation", extra={"days_to_keep": days, "random_delay": rand_splay})
+    sleep(rand_splay)
+    delta = datetime.now() - timedelta(days=days)
+    with Session() as session:
+        query = session.query(Events).filter(Events.event_date_time <= delta)
+        logging.warning(msg="Records Deleted", extra={"rows": query.count()})
+        query.delete()
+        session.commit()
 
 
 def process_message(ch: BlockingChannel, method: Basic.Deliver, properties: BasicProperties, message: bytes) -> None:
@@ -105,11 +120,40 @@ def rabbitmq_message_put(count: int, queue: str) -> None:
             extra={"count": count, "queue": queue},
         )
         for _ in range(count):
+            event_date_time = datetime.now() - timedelta(
+                days=randint(0, 1000),
+                hours=randint(0, 24),
+                minutes=randint(0, 60),
+                seconds=randint(0, 60),
+            )
+            event_types = [
+                "user.session.start",
+                "lc.auth.failed",
+                "lc.addandauth.success",
+                "lc.register.request",
+                "lc.join.request",
+                "user.created",
+                "lc.auth.success",
+                "lc.register.success",
+                "lc.join.failed",
+                "user.deleted",
+                "lc.auth.request",
+                "transaction.exported",
+                "lc.join.success",
+                "lc.statuschange",
+                "lc.addandauth.request",
+                "payment.account.status.change",
+                "lc.addandauth.failed",
+                "payment.account.added",
+                "payment.account.removed",
+                "lc.register.failed",
+                "lc.removed",
+            ]
             msg_payload = {
-                "event_type": "event.user.created.api",
+                "event_type": choice(event_types),
                 "origin": "channel",
                 "channel": "bink",
-                "event_date_time": f"{datetime.now().strftime(settings.datetime_format)}",
+                "event_date_time": f"{event_date_time.strftime(settings.datetime_format)}",
                 "external_user_ref": str(randint(100000000, 999999999)),
                 "internal_user_ref": randint(1, 999),
                 "email": "cpressland@bink.com",
